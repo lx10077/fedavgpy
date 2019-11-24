@@ -1,4 +1,4 @@
-#On the Convergence of FedAvg on Non-IID Data
+# On the Convergence of FedAvg on Non-IID Data
 
 This repository contains the codes for the paper
 
