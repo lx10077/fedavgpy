@@ -43,11 +43,11 @@ Our code is based on the codes for [FedProx](<https://github.com/litian96/FedPro
 4. During the trainning, you visualize the process by running either of the following
 
   ```
-   tensorborad --logdir=result/$DATASET
-   tensorborad --logdir=result/$DATASET/$LOG
+   tensorboard --logdir=result/$DATASET
+   tensorboard --logdir=result/$DATASET/$LOG
    # For example
-   tensorborad --logdir=result/mnist_all_data_0_equal_niid/
-   tensorborad --logdir=result/mnist_all_data_0_equal_niid/2019-11-24T12-05-13_fedavg4_logistic_wn10_tn100_sd0_lr0.1_ep5_bs64_a
+   tensorboard --logdir=result/mnist_all_data_0_equal_niid/
+   tensorboard --logdir=result/mnist_all_data_0_equal_niid/2019-11-24T12-05-13_fedavg4_logistic_wn10_tn100_sd0_lr0.1_ep5_bs64_a
   ```
 
 5. All the codes we used to draw figures are in `plot/`. You can find some choices of hyperparameters in both our paper and the scripts in `plot/`.
