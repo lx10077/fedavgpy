@@ -18,8 +18,13 @@ class Worker(object):
         # Basic parameters
         self.model = model
         self.optimizer = optimizer
+        self.batch_size = options['batch_size']
         self.num_epoch = options['num_epoch']
         self.gpu = options['gpu'] if 'gpu' in options else False
+        if options["model"] == '2nn' or options["model"] == 'logistic':
+            self.flat_data = True
+        else:
+            self.flat_data = False
 
         # Setup local model and evaluate its statics
         self.flops, self.params_num, self.model_bytes = \
@@ -28,6 +33,13 @@ class Worker(object):
     @property
     def model_bits(self):
         return self.model_bytes * 8
+    
+    def flatten_data(self, x):
+        if self.flat_data:
+            current_batch_size = x.shape[0]
+            return x.reshape(current_batch_size, -1)
+        else:
+            return x
 
     def get_model_params(self):
         state_dict = self.model.state_dict()
@@ -53,7 +65,8 @@ class Worker(object):
     def get_flat_grads(self, dataloader):
         self.optimizer.zero_grad()
         loss, total_num = 0., 0
-        for x, y in dataloader:
+        for x, y in dataloader:            
+            x = self.flatten_data(x)
             if self.gpu:
                 x, y = x.cuda(), y.cuda()
             pred = self.model(x)
@@ -83,6 +96,7 @@ class Worker(object):
             for batch_idx, (x, y) in enumerate(train_dataloader):
                 # from IPython import embed
                 # embed()
+                x = self.flatten_data(x)
                 if self.gpu:
                     x, y = x.cuda(), y.cuda()
 
@@ -122,9 +136,9 @@ class Worker(object):
         test_loss = test_acc = test_total = 0.
         with torch.no_grad():
             for x, y in test_dataloader:
-                # print("test")
                 # from IPython import embed
                 # embed()
+                x = self.flatten_data(x)
                 if self.gpu:
                     x, y = x.cuda(), y.cuda()
 
@@ -151,7 +165,7 @@ class LrdWorker(Worker):
         train_loss = train_acc = train_total = 0
         for i in range(self.num_epoch*10):
             x, y = next(iter(train_dataloader))
-            
+            x = self.flatten_data(x)
             if self.gpu:
                 x, y = x.cuda(), y.cuda()
         
@@ -170,7 +184,7 @@ class LrdWorker(Worker):
             
             train_loss += loss.item() * y.size(0)
             train_acc += correct
-        train_total += target_size
+            train_total += target_size
         
         local_solution = self.get_flat_model_params()
         param_dict = {"norm": torch.norm(local_solution).item(),
@@ -198,7 +212,7 @@ class LrAdjustWorker(Worker):
         train_loss = train_acc = train_total = 0
         for i in range(self.num_epoch*10):
             x, y = next(iter(train_dataloader))
-            
+            x = self.flatten_data(x)
             if self.gpu:
                 x, y = x.cuda(), y.cuda()
         
@@ -217,7 +231,7 @@ class LrAdjustWorker(Worker):
             
             train_loss += loss.item() * y.size(0)
             train_acc += correct
-        train_total += target_size
+            train_total += target_size
         
         local_solution = self.get_flat_model_params()
         param_dict = {"norm": torch.norm(local_solution).item(),
